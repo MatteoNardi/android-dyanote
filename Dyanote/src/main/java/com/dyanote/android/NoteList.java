@@ -16,6 +16,10 @@ public class NoteList {
         notes.put(note.getId(), note);
     }
 
+    public void updateNote(Note note) {
+        notes.put(note.getId(), note);
+    }
+
     public int size() {
         return notes.size();
     }

@@ -9,5 +9,7 @@
     <string name="title_activity_edit_note">Edit Note</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_logout">Logout</string>
+    <string name="edit_button_text">Edit</string>
+    <string name="save_button_text">Save</string>
 
 </resources>

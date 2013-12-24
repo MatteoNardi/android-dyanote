@@ -31,15 +31,19 @@ public class NetworkUtils {
         }
     }
 
-    public static String post(String address, String data) {
-        return request(address, "POST", null, data);
+    public static String get(String url, User user) {
+        return request(url, "GET", user, null, false);
     }
 
-    public static String get(String address, User user) {
-        return request(address, "GET", user, null);
+    public static String post(String url, String data) {
+        return request(url, "POST", null, data, false);
     }
 
-    private static String request(String address, String method, User user, String data) {
+    public static String putJson(String url, String data, User user) {
+        return request(url, "PUT", user, data, true);
+    }
+
+    private static String request(String address, String method, User user, String data, boolean isJson) {
         Log.i("NetworkUtils", "Request to " + address);
         URL url = null;
         try {
@@ -68,6 +72,13 @@ public class NetworkUtils {
             return "";
         }
 
+        // Add authentication
+        if (user != null)
+            conn.setRequestProperty("Authorization", "Bearer " + user.getToken());
+
+        // Add authentication
+        if (isJson)
+            conn.setRequestProperty("Content-Type", "application/json");
 
         conn.setDoInput(true);
         conn.setDoOutput(true);
@@ -88,10 +99,6 @@ public class NetworkUtils {
                 return "";
             }
         }
-
-        // Add authentication
-        if (user != null)
-            conn.setRequestProperty("Authorization", "Bearer " + user.getToken());
 
         // Connect and get response
         try {

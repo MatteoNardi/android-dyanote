@@ -1,15 +1,18 @@
 package com.dyanote.android;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.os.Build;
+import android.widget.Button;
+import android.widget.EditText;
 
 public class EditNoteActivity extends ActionBarActivity {
 
@@ -18,9 +21,12 @@ public class EditNoteActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit);
 
+        Bundle b = getIntent().getExtras();
+        Note note = b.getParcelable("note");
+
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new PlaceholderFragment())
+                    .add(R.id.container, NoteEditorFragment.newInstance(note))
                     .commit();
         }
     }
@@ -35,9 +41,6 @@ public class EditNoteActivity extends ActionBarActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()) {
             case R.id.action_settings:
                 return true;
@@ -45,18 +48,45 @@ public class EditNoteActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
+    public static class NoteEditorFragment extends Fragment {
 
-        public PlaceholderFragment() {
+        EditText editor;
+        Button saveButton;
+
+        public static NoteEditorFragment newInstance(Note note) {
+            NoteEditorFragment fragment = new NoteEditorFragment();
+            Bundle args = new Bundle();
+            args.putParcelable("note", note);
+            fragment.setArguments(args);
+            return fragment;
+        }
+
+        public NoteEditorFragment() {
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_edit, container, false);
+
+            editor = (EditText) rootView.findViewById(R.id.editor);
+            saveButton = (Button) rootView.findViewById(R.id.saveButton);
+
+            final Note note = getArguments().getParcelable("note");
+            editor.setText(note.getBody());
+
+            saveButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    note.setBody(editor.getText().toString());
+                    Log.i("Edit note", "Saving note..");
+                    Intent result = new Intent();
+                    result.putExtra("note", note);
+                    getActivity().setResult(Activity.RESULT_OK, result);
+                    getActivity().finish();
+                }
+            });
+
             return rootView;
         }
     }

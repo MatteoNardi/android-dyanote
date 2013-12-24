@@ -7,6 +7,9 @@ import android.util.Log;
 import com.dyanote.android.utils.JsonUtils;
 import com.dyanote.android.utils.NetworkUtils;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.List;
 import java.util.Map;
 
@@ -39,5 +42,20 @@ public class NoteRestService {
         }
 
         return notes;
+    }
+
+    public void upload(Note note) {
+        Log.i("NoteRestService", "Updating note");
+        String url = String.format(c.getString(R.string.page_url),
+                                   user.getEmail(), note.getId());
+        JSONObject json = new JSONObject();
+        try {
+            json.put("title", note.getTitle());
+            json.put("body", note.getBody());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        String response = NetworkUtils.putJson(url, json.toString(), user);
+        Log.i("NoteRestService", response);
     }
 }

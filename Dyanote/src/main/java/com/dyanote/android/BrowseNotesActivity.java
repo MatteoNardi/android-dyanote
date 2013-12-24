@@ -17,12 +17,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 public class BrowseNotesActivity extends ActionBarActivity {
 
     // Code identifying the LoginActivity request
     private static final int LOGIN_REQUEST = 0;
+    // Code identifying the EditNoteActivity request
+    private static final int EDIT_REQUEST = 1;
 
     ViewPager pager; // The widget displaying the pager
     NotesPagerAdapter pagerAdapter; // The model of the ViewPager
@@ -70,6 +73,12 @@ public class BrowseNotesActivity extends ActionBarActivity {
                 new Exception("Login Activity Fail").printStackTrace();
             user.saveToSettings(getPreferences(MODE_PRIVATE));
             loadNotes();
+        } else if (resultCode == Activity.RESULT_OK && requestCode == EDIT_REQUEST) {
+            Note note = (Note) data.getParcelableExtra("note");
+            Log.i("BrowseNotesActivity", "Updating note..");
+            restService.upload(note);
+            notes.updateNote(note);
+            pagerAdapter.updateNotes(notes, pager);
         }
     }
 
@@ -113,7 +122,7 @@ public class BrowseNotesActivity extends ActionBarActivity {
         public Fragment getItem(int position) {
             // FIXME: don't pass position.
             Note note = notes.getById(1);
-            return noteFragment.newInstance(note);
+            return NoteFragment.newInstance(note);
         }
 
         @Override
@@ -136,16 +145,13 @@ public class BrowseNotesActivity extends ActionBarActivity {
         }
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class noteFragment extends Fragment {
 
-        public static noteFragment newInstance(Note note) {
-            noteFragment fragment = new noteFragment();
+    public static class NoteFragment extends Fragment {
+
+        public static NoteFragment newInstance(Note note) {
+            NoteFragment fragment = new NoteFragment();
             Bundle args = new Bundle();
-            args.putLong("note_id", note.getId());
-            args.putCharSequence("note_body", note.getRepresentation());
+            args.putParcelable("note", note);
             fragment.setArguments(args);
             return fragment;
         }
@@ -154,7 +160,19 @@ public class BrowseNotesActivity extends ActionBarActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle bundle) {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
             TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-            textView.setText(getArguments().getCharSequence("note_body"));
+            Button editButton = (Button) rootView.findViewById(R.id.editButton);
+            final Note note = getArguments().getParcelable("note");
+            textView.setText(note.getRepresentation());
+
+            editButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(getActivity(), EditNoteActivity.class);
+                    intent.putExtra("note", note);
+                    getActivity().startActivityForResult(intent, EDIT_REQUEST);
+                }
+            });
+
             return rootView;
         }
     }

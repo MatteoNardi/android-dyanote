@@ -2,7 +2,10 @@ package com.dyanote.android;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.Editable;
 import android.text.SpannableString;
+
+import java.io.StringReader;
 
 public class Note implements Parcelable {
     private long id;
@@ -31,6 +34,10 @@ public class Note implements Parcelable {
 
     public String getBody() {
         return body;
+    }
+
+    public void setBody(String body) {
+        this.body = body;
     }
 
     public SpannableString getRepresentation() {
