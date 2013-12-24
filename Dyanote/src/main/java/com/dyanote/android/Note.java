@@ -1,8 +1,10 @@
 package com.dyanote.android;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.text.SpannableString;
 
-public class Note {
+public class Note implements Parcelable {
     private long id;
     private String title;
     private String body;
@@ -11,6 +13,12 @@ public class Note {
         this.id = id;
         this.title = title;
         this.body = body;
+    }
+
+    public Note(Parcel parcel) {
+        this.id = parcel.readLong();
+        this.title = parcel.readString();
+        this.body = parcel.readString();
     }
 
     public long getId() {
@@ -28,4 +36,26 @@ public class Note {
     public SpannableString getRepresentation() {
         return new SpannableString(body);
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeLong(id);
+        parcel.writeString(title);
+        parcel.writeString(body);
+    }
+
+    public static final Parcelable.Creator<Note> CREATOR = new Parcelable.Creator<Note>() {
+        public Note createFromParcel(Parcel in) {
+            return new Note(in);
+        }
+
+        public Note[] newArray(int size) {
+            return new Note[size];
+        }
+    };
 }
