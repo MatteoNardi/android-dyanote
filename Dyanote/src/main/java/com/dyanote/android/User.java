@@ -6,10 +6,9 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
-import com.dyanote.android.utils.JSonUtils;
+import com.dyanote.android.utils.JsonUtils;
 import com.dyanote.android.utils.NetworkUtils;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class User implements Parcelable {
@@ -65,7 +64,7 @@ public class User implements Parcelable {
                 c.getString(R.string.client_id), c.getString(R.string.client_secret), email, password);
 
         String response = NetworkUtils.post(url, data);
-        Map<String, String> json = JSonUtils.parseObject(response);
+        Map<String, String> json = JsonUtils.parseObject(response);
 
         boolean isLoginSuccessful = false;
         if(json.containsKey("access_token")) {

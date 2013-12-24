@@ -112,7 +112,7 @@ public class BrowseNotesActivity extends ActionBarActivity {
         @Override
         public Fragment getItem(int position) {
             // FIXME: don't pass position.
-            Note note = notes.getById(position);
+            Note note = notes.getById(1);
             return noteFragment.newInstance(note);
         }
 

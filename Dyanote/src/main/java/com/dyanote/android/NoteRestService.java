@@ -2,14 +2,13 @@ package com.dyanote.android;
 
 
 import android.content.Context;
-import android.util.JsonReader;
+import android.util.Log;
 
+import com.dyanote.android.utils.JsonUtils;
 import com.dyanote.android.utils.NetworkUtils;
 
-import java.io.BufferedInputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.util.List;
+import java.util.Map;
 
 public class NoteRestService {
 
@@ -26,36 +25,19 @@ public class NoteRestService {
     public NoteList getAllNotes() {
         NoteList notes = new NoteList();
 
-        try {
-            URL url = new URL(String.format(c.getString(R.string.pages_url), user.getEmail()));
-            System.out.println(user.getEmail());
-            System.out.println(user.getToken());
-            System.out.println(String.format(c.getString(R.string.pages_url), user.getEmail()));
+        String url = String.format(c.getString(R.string.pages_url), user.getEmail());
+        String response = NetworkUtils.get(url, user);
 
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestProperty("Authorization", "Bearer " + user.getToken());
-            conn.setReadTimeout(10000);
-            conn.setConnectTimeout(15000);
-            conn.setDoInput(true);
-            conn.setDoOutput(true);
+        List< Map<String, String> > pages = JsonUtils.parseArray(response);
 
-            conn.connect();
-            BufferedInputStream in = new BufferedInputStream(conn.getInputStream());
-
-            JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
-            NetworkUtils.dumpStream(in);
-            /*
-            reader.beginObject();
-            if (reader.hasNext() && reader.nextName() == "access_token") {
-                token = reader.nextString();
-           */
-            reader.close();
-            in.close();
-            conn.disconnect();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return notes;
+        for(Map<String, String> page: pages) {
+            String body = page.get("body");
+            String title = page.get("title");
+            long id = Long.parseLong(page.get("id")); //TODO: fixme
+            Log.i("NoteRestService", body + title + "###" + id);
+            notes.addNote(new Note(id, title, body));
         }
+
         return notes;
     }
 }
