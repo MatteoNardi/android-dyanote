@@ -51,7 +51,8 @@ public class NoteRestService {
         JSONObject json = new JSONObject();
         try {
             json.put("title", note.getTitle());
-            json.put("body", note.getBody());
+            // TODO: fix this
+            json.put("body", note.getXml());
         } catch (JSONException e) {
             e.printStackTrace();
         }

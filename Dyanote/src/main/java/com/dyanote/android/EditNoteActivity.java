@@ -73,12 +73,12 @@ public class EditNoteActivity extends ActionBarActivity {
             saveButton = (Button) rootView.findViewById(R.id.saveButton);
 
             final Note note = getArguments().getParcelable("note");
-            editor.setText(note.getBody());
+            editor.setText(note.getEditRepresentation());
 
             saveButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    note.setBody(editor.getText().toString());
+                    note.setFromEditRepresentation(editor.getText().toString());
                     Log.i("Edit note", "Saving note..");
                     Intent result = new Intent();
                     result.putExtra("note", note);

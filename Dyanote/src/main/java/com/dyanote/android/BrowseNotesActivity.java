@@ -162,7 +162,7 @@ public class BrowseNotesActivity extends ActionBarActivity {
             TextView textView = (TextView) rootView.findViewById(R.id.section_label);
             Button editButton = (Button) rootView.findViewById(R.id.editButton);
             final Note note = getArguments().getParcelable("note");
-            textView.setText(note.getRepresentation());
+            textView.setText(note.getViewRepresentation());
 
             editButton.setOnClickListener(new View.OnClickListener() {
                 @Override
