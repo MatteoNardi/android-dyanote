@@ -12,7 +12,8 @@
         android:id="@+id/section_label"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_above="@+id/editButton" />
+        android:layout_above="@+id/editButton"
+        android:lineSpacingExtra="5dp" />
 
     <Button
         android:layout_width="wrap_content"

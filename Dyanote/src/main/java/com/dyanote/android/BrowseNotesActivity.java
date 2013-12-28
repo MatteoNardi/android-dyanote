@@ -58,10 +58,9 @@ public class BrowseNotesActivity extends ActionBarActivity {
     }
 
     private void loadNotes() {
-        Log.w("WTF", user.getEmail());
-        Log.w("WTF", user.getToken());
         restService = new NoteRestService(user, getApplicationContext());
         notes = restService.getAllNotes();
+        Log.i("BrowseNotesActivity", notes.size() + " notes.");
         pagerAdapter.updateNotes(notes, pager);
     }
 
@@ -121,7 +120,7 @@ public class BrowseNotesActivity extends ActionBarActivity {
         @Override
         public Fragment getItem(int position) {
             // FIXME: don't pass position.
-            Note note = notes.getById(1);
+            Note note = notes.getById(3);
             return NoteFragment.newInstance(note);
         }
 
@@ -151,6 +150,10 @@ public class BrowseNotesActivity extends ActionBarActivity {
         public static NoteFragment newInstance(Note note) {
             NoteFragment fragment = new NoteFragment();
             Bundle args = new Bundle();
+            if(note == null) {
+                Log.e("BrowseNotesActivity", "Can't create note: null");
+                return null;
+            }
             args.putParcelable("note", note);
             fragment.setArguments(args);
             return fragment;
@@ -162,7 +165,7 @@ public class BrowseNotesActivity extends ActionBarActivity {
             TextView textView = (TextView) rootView.findViewById(R.id.section_label);
             Button editButton = (Button) rootView.findViewById(R.id.editButton);
             final Note note = getArguments().getParcelable("note");
-            textView.setText(note.getViewRepresentation());
+            textView.setText(note.getViewRepresentation(getActivity().getApplicationContext()));
 
             editButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -172,7 +175,6 @@ public class BrowseNotesActivity extends ActionBarActivity {
                     getActivity().startActivityForResult(intent, EDIT_REQUEST);
                 }
             });
-
             return rootView;
         }
     }

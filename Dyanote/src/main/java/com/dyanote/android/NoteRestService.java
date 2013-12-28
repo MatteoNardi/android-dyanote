@@ -52,7 +52,7 @@ public class NoteRestService {
         try {
             json.put("title", note.getTitle());
             // TODO: fix this
-            json.put("body", note.getXml());
+            json.put("body", note.getXmlBody());
         } catch (JSONException e) {
             e.printStackTrace();
         }
