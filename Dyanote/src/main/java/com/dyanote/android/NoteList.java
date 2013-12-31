@@ -27,4 +27,18 @@ public class NoteList {
     public Note getById(long id) {
         return notes.get(id);
     }
+
+    public Note getRoot() {
+        Note root = null;
+        for(Note note: notes.values()) {
+            if(note.getParentId() == note.getId()) {
+                if (root != null)
+                    throw new IllegalStateException("More than one root note.");
+                root = note;
+            }
+        }
+        if(root == null)
+            throw new IllegalStateException("No root note found.");
+        return root;
+    }
 }

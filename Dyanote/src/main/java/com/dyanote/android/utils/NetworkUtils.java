@@ -17,7 +17,10 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 
-public class NetworkUtils {
+public final class NetworkUtils {
+
+    private NetworkUtils() {
+    }
 
     public static void dumpStream(InputStream s) {
         BufferedReader in = new BufferedReader(new InputStreamReader(s));

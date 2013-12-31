@@ -18,7 +18,7 @@ public class JsonUtils {
         try {
             parseObject(reader, json);
             reader.close();
-        } catch (IOException e) {
+        } catch (Exception e) {
             Log.e("JsonUtils", "Error parsing Json Object: " + str, e);
         }
         return json;
@@ -45,7 +45,7 @@ public class JsonUtils {
             }
             reader.endArray();
             reader.close();
-        } catch (IOException e) {
+        } catch (Exception e) {
             Log.e("JsonUtils", "Error parsing Json Object: " + str, e);
         }
         return jsonList;

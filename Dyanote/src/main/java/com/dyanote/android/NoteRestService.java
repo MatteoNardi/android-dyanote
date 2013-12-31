@@ -34,11 +34,18 @@ public class NoteRestService {
         List< Map<String, String> > pages = JsonUtils.parseArray(response);
 
         for(Map<String, String> page: pages) {
-            String body = page.get("body");
             String title = page.get("title");
-            long id = Long.parseLong(page.get("id")); //TODO: fixme
-            Log.i("NoteRestService", body + title + "###" + id);
-            notes.addNote(new Note(id, title, body));
+            long id = Long.parseLong(page.get("id"));
+
+            // TODO: only get pages which need an update
+            String page_url = String.format(c.getString(R.string.page_url), user.getEmail(), id);
+            String page_response = NetworkUtils.get(page_url, user);
+            Map<String, String> page_details = JsonUtils.parseObject(page_response);
+
+            long parentId = Long.parseLong(page_details.get("parent").split("/")[7]);
+            String body = page_details.get("body");
+
+            notes.addNote(new Note(id, parentId, title, body));
         }
 
         return notes;
@@ -51,8 +58,10 @@ public class NoteRestService {
         JSONObject json = new JSONObject();
         try {
             json.put("title", note.getTitle());
-            // TODO: fix this
             json.put("body", note.getXmlBody());
+            String parentUrl = String.format(c.getString(R.string.page_url),
+                                             user.getEmail(), note.getParentId());
+            json.put("parent", parentUrl);
         } catch (JSONException e) {
             e.printStackTrace();
         }

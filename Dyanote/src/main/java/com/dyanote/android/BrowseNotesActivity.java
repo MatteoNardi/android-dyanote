@@ -1,16 +1,16 @@
 package com.dyanote.android;
 
-import java.util.Locale;
-
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v7.app.ActionBarActivity;
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.os.Bundle;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBarActivity;
+import android.text.style.TextAppearanceSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -19,6 +19,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+
+import com.dyanote.android.utils.DyanoteSpannableStringBuilder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class BrowseNotesActivity extends ActionBarActivity {
 
@@ -40,7 +45,7 @@ public class BrowseNotesActivity extends ActionBarActivity {
         // Setup widgets.
         notes = new NoteList();
         setContentView(R.layout.activity_browse);
-        pagerAdapter = new NotesPagerAdapter(getSupportFragmentManager(), notes);
+        pagerAdapter = new NotesPagerAdapter(getSupportFragmentManager());
         pager = (ViewPager) findViewById(R.id.pager);
         pager.setAdapter(pagerAdapter);
 
@@ -61,23 +66,23 @@ public class BrowseNotesActivity extends ActionBarActivity {
         restService = new NoteRestService(user, getApplicationContext());
         notes = restService.getAllNotes();
         Log.i("BrowseNotesActivity", notes.size() + " notes.");
-        pagerAdapter.updateNotes(notes, pager);
+        pagerAdapter.updateNotes(notes);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK && requestCode == LOGIN_REQUEST) {
-            user = (User) data.getParcelableExtra("user");
+            user = data.getParcelableExtra("user");
             if(!user.isLoggedIn())
                 new Exception("Login Activity Fail").printStackTrace();
             user.saveToSettings(getPreferences(MODE_PRIVATE));
             loadNotes();
         } else if (resultCode == Activity.RESULT_OK && requestCode == EDIT_REQUEST) {
-            Note note = (Note) data.getParcelableExtra("note");
+            Note note = data.getParcelableExtra("note");
             Log.i("BrowseNotesActivity", "Updating note..");
             restService.upload(note);
             notes.updateNote(note);
-            pagerAdapter.updateNotes(notes, pager);
+            pagerAdapter.updateNotes(notes);
         }
     }
 
@@ -104,43 +109,43 @@ public class BrowseNotesActivity extends ActionBarActivity {
     public class NotesPagerAdapter extends FragmentStatePagerAdapter {
 
         private NoteList notes;
+        // IDs of the currently opened notes, from the root note to the current note
+        private List<Long> openNotesId;
+        // Fake fragment shown after all notes
+        private Fragment endFragment;
 
-        public NotesPagerAdapter(FragmentManager fm, NoteList notes) {
+        public NotesPagerAdapter(FragmentManager fm) {
             super(fm);
-            this.notes = notes;
+            this.openNotesId = new ArrayList<Long>();
+            this.notes = new NoteList();
+            this.endFragment = EndFragment.newInstance();
         }
 
-        public void updateNotes(NoteList notes, ViewGroup v) {
-            //startUpdate(v);
+        public void updateNotes(NoteList notes) {
+            if(this.notes.size() == 0)
+                openNotesId.add(notes.getRoot().getId());
             this.notes = notes;
             notifyDataSetChanged();
-            //finishUpdate(v);
         }
 
         @Override
         public Fragment getItem(int position) {
-            // FIXME: don't pass position.
-            Note note = notes.getById(3);
+            if (position >= openNotesId.size())
+                return endFragment;
+            Note note = notes.getById(openNotesId.get(position));
             return NoteFragment.newInstance(note);
         }
 
         @Override
         public int getCount() {
-            return notes.size();
+            return openNotesId.size() + 1;
         }
 
         @Override
         public CharSequence getPageTitle(int position) {
-            Locale l = Locale.getDefault();
-            switch (position) {
-                case 0:
-                    return getString(R.string.title_section1).toUpperCase(l);
-                case 1:
-                    return getString(R.string.title_section2).toUpperCase(l);
-                case 2:
-                    return getString(R.string.title_section3).toUpperCase(l);
-            }
-            return null;
+            if (position >= openNotesId.size())
+                return "...";
+            return notes.getById(openNotesId.get(position)).getTitle();
         }
     }
 
@@ -161,11 +166,33 @@ public class BrowseNotesActivity extends ActionBarActivity {
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle bundle) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+            View rootView = inflater.inflate(R.layout.fragment_view, container, false);
             TextView textView = (TextView) rootView.findViewById(R.id.section_label);
             Button editButton = (Button) rootView.findViewById(R.id.editButton);
             final Note note = getArguments().getParcelable("note");
-            textView.setText(note.getViewRepresentation(getActivity().getApplicationContext()));
+
+            final Context c = getActivity().getApplicationContext();
+            textView.setText(note.getViewRepresentation(new DyanoteSpannableStringBuilder() {
+                @Override
+                public void setBold(int start, int end) {
+                    setSpan(new TextAppearanceSpan(c, R.style.BoldText), start, end, 0);
+                }
+
+                @Override
+                public void setItalic(int start, int end) {
+                    setSpan(new TextAppearanceSpan(c, R.style.ItalicText), start, end, 0);
+                }
+
+                @Override
+                public void setHeader(int start, int end) {
+                    setSpan(new TextAppearanceSpan(c, R.style.HeaderText), start, end, 0);
+                }
+
+                @Override
+                public void setLink(int start, int end, Long href) {
+                    setSpan(new TextAppearanceSpan(c, R.style.LinkText), start, end, 0);
+                }
+            }));
 
             editButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -179,4 +206,14 @@ public class BrowseNotesActivity extends ActionBarActivity {
         }
     }
 
+    public static class EndFragment extends Fragment {
+        public static EndFragment newInstance() {
+            return new EndFragment();
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle bundle) {
+            return inflater.inflate(R.layout.fragment_view_end, container, false);
+        }
+    }
 }

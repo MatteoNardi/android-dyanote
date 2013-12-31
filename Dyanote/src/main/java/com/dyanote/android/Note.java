@@ -11,6 +11,8 @@ import android.text.style.TextAppearanceSpan;
 import android.util.Log;
 import android.util.Xml;
 
+import com.dyanote.android.utils.DyanoteSpannableStringBuilder;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -25,15 +27,22 @@ public class Note implements Parcelable {
     private String title;
     private String xmlBody;
     static SpannableString niceBody;
+    private Long parentId;
 
-    public Note(long id, String title, String xmlBody) {
+    public Note(long id, long parentId, String title, String xmlBody) {
+        if(title == null)
+            throw new IllegalArgumentException("title must not be null");
+        if(xmlBody == null)
+            throw new IllegalArgumentException("xmlBody must not be null");
         this.id = id;
+        this.parentId = parentId;
         this.title = title;
         this.xmlBody = xmlBody;
     }
 
     public Note(Parcel parcel) {
         this.id = parcel.readLong();
+        this.parentId = parcel.readLong();
         this.title = parcel.readString();
         this.xmlBody = parcel.readString();
         this.niceBody = null;
@@ -41,6 +50,10 @@ public class Note implements Parcelable {
 
     public long getId() {
         return id;
+    }
+
+    public Long getParentId() {
+        return parentId;
     }
 
     public String getTitle() {
@@ -53,10 +66,10 @@ public class Note implements Parcelable {
     }
 
     // Get a SpannableString representation of the body (displayable on a TextView)
-    public SpannableString getViewRepresentation(Context c) {
+    public SpannableString getViewRepresentation(DyanoteSpannableStringBuilder builder) {
         if (niceBody == null) {
             try {
-                niceBody = convertToSpannableString(c);
+                niceBody = convertToSpannableString(builder);
             } catch (Exception e) {
                 Log.e("XML parsing", "Error converting to Spannable String from XML", e);
                 return new SpannableString("Error");
@@ -79,9 +92,10 @@ public class Note implements Parcelable {
 
     /* Serialization and conversion methods */
 
-    private SpannableString convertToSpannableString(Context c) throws IOException, XmlPullParserException {
+    private SpannableString convertToSpannableString(DyanoteSpannableStringBuilder builder)
+            throws IOException, XmlPullParserException {
+
         InputStream in = new ByteArrayInputStream(xmlBody.getBytes("UTF-8"));
-        SpannableStringBuilder output = new SpannableStringBuilder();
         Log.i("XML", "Converting note from xml to spannable string " + xmlBody);
         try {
             XmlPullParser parser = Xml.newPullParser();
@@ -89,9 +103,10 @@ public class Note implements Parcelable {
             parser.setInput(new StringReader(xmlBody));
 
             int startBold = -1;
-            int startItalics = -1;
+            int startItalic = -1;
             int startHeader = -1;
             int startLink = -1;
+            Long current_href = getId();
 
             int eventType = parser.getEventType();
             while (eventType != XmlPullParser.END_DOCUMENT) {
@@ -101,45 +116,47 @@ public class Note implements Parcelable {
 
                 } else if(eventType == XmlPullParser.START_TAG) {
                     String tag = parser.getName();
-                    int pos = output.length();
+                    int pos = builder.length();
                     Log.i("XML", "Start tag " + tag);
-                    if(tag == "b") {
+                    if(tag.equals("b")) {
                         startBold = pos;
-                    } else if(tag == "i") {
-                        startItalics = pos;
-                    } else if(tag == "h1") {
+                    } else if(tag.equals("i")) {
+                        startItalic = pos;
+                    } else if(tag.equals("h1")) {
                         startHeader = pos;
-                    } else if (tag == "a") {
-                        startLink = pos;
+                    } else {
+                        if (tag.equals("a")) {
+                            startLink = pos;
+                            try {
+                                current_href = Long.parseLong(parser.getAttributeValue(0));
+                            } catch (Exception e) {
+                                Log.w("XML", "Link with invalid href");
+                            }
+                        }
                     }
 
                 } else if(eventType == XmlPullParser.END_TAG) {
                     String tag = parser.getName();
-                    int end = output.length();
+                    int end = builder.length();
                     int start = -1;
-                    Object style = null;
                     Log.i("XML", "End tag " + tag);
-                    if(tag == "b") {
+                    if(tag.equals("b")) {
                         start = startBold;
-                        style = new TextAppearanceSpan(c, R.style.BoldText);
-                    } else if(tag == "i") {
-                        start = startItalics;
-                        style = new TextAppearanceSpan(c, R.style.ItalicText);
-                    } else if(tag == "h1") {
+                        builder.setBold(start, end);
+                    } else if(tag.equals("i")) {
+                        start = startItalic;
+                        builder.setItalic(start, end);
+                    } else if(tag.equals("h1")) {
                         start = startHeader;
-                        style = new TextAppearanceSpan(c, R.style.HeaderText);
-                    } else if (tag == "a") {
+                        builder.setHeader(start, end);
+                    } else if (tag.equals("a")) {
                         start = startLink;
-                        style = new TextAppearanceSpan(c, R.style.LinkText);
+                        builder.setLink(start, end, current_href);
                     }
-                    if(start < 0 || end < 0)
-                        Log.w("XML", "Wrong note format at " + start + ":" + end);
-                    else
-                        output.setSpan(style, start, end, 0);
 
                 } else if(eventType == XmlPullParser.TEXT) {
                     Log.i("XML", "Text "+parser.getText());
-                    output.append(parser.getText());
+                    builder.append(parser.getText());
                 }
                 eventType = parser.next();
             }
@@ -147,7 +164,7 @@ public class Note implements Parcelable {
         } finally {
             in.close();
         }
-        return new SpannableString(output);
+        return new SpannableString(builder);
     }
 
     private String convertToMarkdown() {
@@ -168,6 +185,7 @@ public class Note implements Parcelable {
     @Override
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeLong(id);
+        parcel.writeLong(parentId);
         parcel.writeString(title);
         parcel.writeString(xmlBody);
     }
