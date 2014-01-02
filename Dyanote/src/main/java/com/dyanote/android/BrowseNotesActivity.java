@@ -3,7 +3,10 @@ package com.dyanote.android;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
@@ -17,10 +20,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.dyanote.android.ui.NotesPagerAdapter;
 import com.dyanote.android.ui.NotesViewPager;
 import com.dyanote.android.utils.DyanoteSpannableStringBuilder;
+import com.dyanote.android.utils.Func;
+import com.dyanote.android.utils.NetworkReceiver;
 
 public class BrowseNotesActivity extends ActionBarActivity {
 
@@ -30,15 +36,35 @@ public class BrowseNotesActivity extends ActionBarActivity {
     public static final int EDIT_REQUEST = 1;
 
     NotesViewPager pager; // The widget displaying the pager
-
     NotesPagerAdapter pagerAdapter; // The model of the ViewPager
+
     NoteList notes;
     User user;
+
     NoteRestService restService;
+
+    // Connectivity informations
+    private NetworkReceiver receiver = new NetworkReceiver();
+    boolean needConnection = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Register BroadcastReceiver to track connection changes.
+        IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        receiver = new NetworkReceiver();
+        receiver.setActionOnConnected(new Runnable() {
+            @Override
+            public void run() {
+                if(needConnection) {
+                    Toast.makeText(getApplicationContext(), com.dyanote.android.R.string.connected_message, Toast.LENGTH_LONG).show();
+                    needConnection = false;
+                    loadNotes();
+                }
+            }
+        });
+        this.registerReceiver(receiver, filter);
 
         // Setup widgets.
         notes = new NoteList();
@@ -61,10 +87,27 @@ public class BrowseNotesActivity extends ActionBarActivity {
     }
 
     private void loadNotes() {
+        if(!isConnected()) {
+            Toast.makeText(getApplicationContext(), R.string.no_network_error, 1000).show();
+            needConnection = true;
+            return;
+        }
         restService = new NoteRestService(user, getApplicationContext());
-        notes = restService.getAllNotes();
-        Log.i("BrowseNotesActivity", notes.size() + " notes.");
-        pagerAdapter.updateNotes(notes);
+        Log.i("BrowseNotesActivity", "Updating notes.");
+        restService.getAllNotes(new Func<NoteList>() {
+            @Override
+            public void run(NoteList ris) {
+                notes = ris;
+                Log.i("BrowseNotesActivity", notes.size() + " notes.");
+                pagerAdapter.updateNotes(notes);
+            }
+        });
+    }
+
+    private boolean isConnected() {
+        ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+        return (networkInfo != null && networkInfo.isConnected());
     }
 
     @Override
@@ -101,6 +144,14 @@ public class BrowseNotesActivity extends ActionBarActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (receiver != null) {
+            this.unregisterReceiver(receiver);
+        }
     }
 
     public NotesViewPager getPager() {

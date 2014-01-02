@@ -11,5 +11,7 @@
     <string name="action_logout">Logout</string>
     <string name="edit_button_text">Edit</string>
     <string name="save_button_text">Save</string>
+    <string name="no_network_error">Dyanote needs an internet connection to get your notes.</string>
+    <string name="connected_message">Connected.</string>
 
 </resources>
