@@ -26,7 +26,7 @@ public class Note implements Parcelable {
     private long id;
     private String title;
     private String xmlBody;
-    static SpannableString niceBody;
+    private SpannableString niceBody;
     private Long parentId;
 
     public Note(long id, long parentId, String title, String xmlBody) {
