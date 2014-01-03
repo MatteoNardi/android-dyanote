@@ -44,6 +44,10 @@ public class Note implements Parcelable {
         return xmlBody;
     }
 
+    public void setXmlBody(String xmlBody) {
+        this.xmlBody = xmlBody;
+    }
+
 
     /* Parcelable implementation */
 

@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.method.LinkMovementMethod;
+import android.text.style.BulletSpan;
 import android.text.style.ClickableSpan;
 import android.text.style.TextAppearanceSpan;
 import android.util.Log;
@@ -60,6 +61,7 @@ public class NoteFragment extends Fragment {
             @Override
             public void setHeader(int start, int end) {
                 setSpan(new TextAppearanceSpan(c, R.style.HeaderText), start, end, 0);
+                append('\n');
             }
 
             @Override
@@ -75,6 +77,17 @@ public class NoteFragment extends Fragment {
                     }
                 }, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 // TODO: Save span coordinates.
+            }
+
+            @Override
+            public void addNewline() {
+                append("\n");
+            }
+
+            @Override
+            public void setBullet(int start, int end) {
+                setSpan(new BulletSpan(10), start, end, 0);
+                append('\n');
             }
         };
         NoteConversionTools.convert(note, converter);
@@ -94,7 +107,7 @@ public class NoteFragment extends Fragment {
 
     // SpannableNoteConverter is a NoteConverter which allows to add special formatting.
     // This is used to convert a Note xml to a representation compatible with a TextView.
-    public abstract class SpannableNoteConverter extends SpannableStringBuilder implements NoteConversionTools.NoteConverter {
+    abstract static class SpannableNoteConverter extends SpannableStringBuilder implements NoteConversionTools.NoteConverter {
 
         public abstract void setBold(int start, int end);
 

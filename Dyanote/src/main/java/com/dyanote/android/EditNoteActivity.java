@@ -14,6 +14,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
+import java.io.IOException;
+
 public class EditNoteActivity extends ActionBarActivity {
 
     @Override
@@ -73,12 +75,15 @@ public class EditNoteActivity extends ActionBarActivity {
             saveButton = (Button) rootView.findViewById(R.id.saveButton);
 
             final Note note = getArguments().getParcelable("note");
-            editor.setText(note.getEditRepresentation());
+            MarkdownNoteConverter editRepresentation = new MarkdownNoteConverter();
+            NoteConversionTools.convert(note, editRepresentation);
+            editor.setText(editRepresentation);
 
             saveButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    note.setFromEditRepresentation(editor.getText().toString());
+                    String newXml = NoteConversionTools.MarkdownToXML(editor.getText().toString());
+                    note.setXmlBody(newXml);
                     Log.i("Edit note", "Saving note..");
                     Intent result = new Intent();
                     result.putExtra("note", note);
@@ -91,4 +96,76 @@ public class EditNoteActivity extends ActionBarActivity {
         }
     }
 
+    private static class MarkdownNoteConverter implements NoteConversionTools.NoteConverter {
+
+        StringBuilder builder = new StringBuilder();
+
+        @Override
+        public void setBold(int start, int end) {
+            builder.insert(start, "**");
+            builder.insert(end+2, "**");
+        }
+
+        @Override
+        public void setItalic(int start, int end) {
+            builder.insert(start, '*');
+            builder.insert(end+1, '*');
+        }
+
+        @Override
+        public void setHeader(int start, int end) {
+            builder.insert(start, "# ");
+            builder.insert(end+2, "\n");
+        }
+
+        @Override
+        public void setLink(int start, int end, Long href) {
+            String link = String.format("[%s](%s)", builder.substring(start, end),  href);
+            builder.replace(start, end, link);
+        }
+
+        @Override
+        public void addNewline() {
+            builder.append("\n");
+        }
+
+        @Override
+        public void setBullet(int start, int end) {
+            builder.insert(start, "\n- ");
+        }
+
+        // TODO: escape
+
+
+        /* Thank you Java for making StringBuilder final <3 */
+        @Override
+        public Appendable append(char c) throws IOException {
+            return builder.append(c);
+        }
+
+        @Override
+        public Appendable append(CharSequence charSequence) throws IOException {
+            return builder.append(charSequence);
+        }
+
+        @Override
+        public Appendable append(CharSequence charSequence, int i, int i2) throws IOException {
+            return builder.append(charSequence, i, i2);
+        }
+
+        @Override
+        public int length() {
+            return builder.length();
+        }
+
+        @Override
+        public char charAt(int i) {
+            return builder.charAt(i);
+        }
+
+        @Override
+        public CharSequence subSequence(int i, int i2) {
+            return builder.subSequence(i, i2);
+        }
+    }
 }
