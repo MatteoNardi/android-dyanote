@@ -4,9 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
-import android.text.Html;
 import android.text.Spannable;
+import android.text.SpannableStringBuilder;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.text.style.TextAppearanceSpan;
@@ -20,8 +19,8 @@ import android.widget.TextView;
 import com.dyanote.android.BrowseNotesActivity;
 import com.dyanote.android.EditNoteActivity;
 import com.dyanote.android.Note;
+import com.dyanote.android.NoteConversionTools;
 import com.dyanote.android.R;
-import com.dyanote.android.utils.DyanoteSpannableStringBuilder;
 
 public class NoteFragment extends Fragment {
 
@@ -46,7 +45,8 @@ public class NoteFragment extends Fragment {
 
         final BrowseNotesActivity activity = (BrowseNotesActivity) getActivity();
         final Context c = activity.getApplicationContext();
-        textView.setText(note.getViewRepresentation(new DyanoteSpannableStringBuilder() {
+
+        SpannableNoteConverter converter = new SpannableNoteConverter() {
             @Override
             public void setBold(int start, int end) {
                 setSpan(new TextAppearanceSpan(c, R.style.BoldText), start, end, 0);
@@ -76,7 +76,9 @@ public class NoteFragment extends Fragment {
                 }, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 // TODO: Save span coordinates.
             }
-        }));
+        };
+        NoteConversionTools.convert(note, converter);
+        textView.setText(converter);
 
         textView.setMovementMethod(LinkMovementMethod.getInstance());
         editButton.setOnClickListener(new View.OnClickListener() {
@@ -88,5 +90,18 @@ public class NoteFragment extends Fragment {
             }
         });
         return rootView;
+    }
+
+    // SpannableNoteConverter is a NoteConverter which allows to add special formatting.
+    // This is used to convert a Note xml to a representation compatible with a TextView.
+    public abstract class SpannableNoteConverter extends SpannableStringBuilder implements NoteConversionTools.NoteConverter {
+
+        public abstract void setBold(int start, int end);
+
+        public abstract void setItalic(int start, int end);
+
+        public abstract void setHeader(int start, int end);
+
+        public abstract void setLink(int start, int end, Long href);
     }
 }
