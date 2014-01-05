@@ -74,4 +74,11 @@ public class NotesPagerAdapter extends FragmentStatePagerAdapter {
     public int getItemPosition(Object object) {
         return POSITION_NONE;
     }
+
+    public Note getNoteAt(int position) {
+        if(position < openNotesId.size())
+            return notes.getById(openNotesId.get(position));
+        else
+            return null;
+    }
 }

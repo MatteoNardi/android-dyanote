@@ -15,5 +15,8 @@
     <string name="connected_message">Connected.</string>
     <string name="delete_button_text">Delete</string>
     <string name="new_button_text">New</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_new">New</string>
 
 </resources>

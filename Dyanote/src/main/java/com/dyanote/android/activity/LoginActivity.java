@@ -9,6 +9,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
+import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -25,7 +26,7 @@ import com.dyanote.android.User;
  * Activity which displays a login screen to the user, offering registration as
  * well.
  */
-public class LoginActivity extends Activity {
+public class LoginActivity extends ActionBarActivity {
     // Keep track of the login task to ensure we can cancel it if requested.
     private UserLoginTask authTask = null;
 
@@ -45,7 +46,7 @@ public class LoginActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_login);
-        setupActionBar();
+        getSupportActionBar().setHomeButtonEnabled(false);
 
         // Set up the login form.
         email = getIntent().getStringExtra(getString(R.string.default_email));
@@ -74,15 +75,6 @@ public class LoginActivity extends Activity {
                 attemptLogin();
             }
         });
-    }
-
-    // Set up the ActionBar if the API is available.
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private void setupActionBar() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            // Show the Up button in the action bar.
-            getActionBar().setDisplayHomeAsUpEnabled(true);
-        }
     }
 
     @Override

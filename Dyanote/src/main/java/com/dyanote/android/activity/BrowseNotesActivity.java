@@ -9,6 +9,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -50,7 +51,6 @@ public class BrowseNotesActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         // Register BroadcastReceiver to track connection changes.
         IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         receiver = new NetworkReceiver();
@@ -72,6 +72,12 @@ public class BrowseNotesActivity extends ActionBarActivity {
         pagerAdapter = new NotesPagerAdapter(getSupportFragmentManager());
         pager = (NotesViewPager) findViewById(R.id.pager);
         pager.setAdapter(pagerAdapter);
+        pager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+            @Override
+            public void onPageSelected(int i) {
+                updateActionBarTitle();
+            }
+        });
 
         // Check if we already have stored credentials.
         SharedPreferences settings = getPreferences(MODE_PRIVATE);
@@ -100,8 +106,15 @@ public class BrowseNotesActivity extends ActionBarActivity {
                 notes = ris;
                 Log.i("BrowseNotesActivity", notes.size() + " notes.");
                 pagerAdapter.updateNotes(notes);
+                updateActionBarTitle();
             }
         });
+    }
+
+    private void updateActionBarTitle() {
+        Note currentNote = pager.getCurrentNote();
+        String title = currentNote != null ? currentNote.getTitle() : "Dyanote";
+        getSupportActionBar().setTitle(title);
     }
 
     private boolean isConnected() {
@@ -124,6 +137,10 @@ public class BrowseNotesActivity extends ActionBarActivity {
             restService.upload(note);
             notes.updateNote(note);
             pagerAdapter.updateNotes(notes);
+        } else {
+            Log.w("BrowseNotesActivity", "Unknown result for" + requestCode + " with code" + resultCode);
+            finish();
+            System.exit(0);
         }
     }
 
@@ -141,6 +158,17 @@ public class BrowseNotesActivity extends ActionBarActivity {
                 User.forgetSettings(getPreferences(MODE_PRIVATE));
                 Intent intent = new Intent(this, LoginActivity.class);
                 startActivityForResult(intent, LOGIN_REQUEST);
+                return true;
+            case R.id.action_new:
+                //TODO: create new note
+                return true;
+            case R.id.action_delete:
+                //TODO: create new note
+                return true;
+            case R.id.action_edit:
+                Intent edit_intent = new Intent(this, EditNoteActivity.class);
+                edit_intent.putExtra("note", pager.getCurrentNote());
+                startActivityForResult(edit_intent, BrowseNotesActivity.EDIT_REQUEST);
                 return true;
         }
         return super.onOptionsItemSelected(item);

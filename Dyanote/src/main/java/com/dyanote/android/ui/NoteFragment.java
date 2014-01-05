@@ -41,7 +41,6 @@ public class NoteFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle bundle) {
         View rootView = inflater.inflate(R.layout.fragment_view, container, false);
         TextView textView = (TextView) rootView.findViewById(R.id.note_text_view);
-        Button editButton = (Button) rootView.findViewById(R.id.editButton);
         final Note note = getArguments().getParcelable("note");
 
         final BrowseNotesActivity activity = (BrowseNotesActivity) getActivity();
@@ -92,16 +91,8 @@ public class NoteFragment extends Fragment {
         };
         NoteConversionTools.convert(note, converter);
         textView.setText(converter);
-
         textView.setMovementMethod(LinkMovementMethod.getInstance());
-        editButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(activity, EditNoteActivity.class);
-                intent.putExtra("note", note);
-                activity.startActivityForResult(intent, BrowseNotesActivity.EDIT_REQUEST);
-            }
-        });
+
         return rootView;
     }
 
