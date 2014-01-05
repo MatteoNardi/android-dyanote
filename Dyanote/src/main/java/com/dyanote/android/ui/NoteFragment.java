@@ -17,8 +17,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.dyanote.android.BrowseNotesActivity;
-import com.dyanote.android.EditNoteActivity;
+import com.dyanote.android.activity.BrowseNotesActivity;
+import com.dyanote.android.activity.EditNoteActivity;
 import com.dyanote.android.Note;
 import com.dyanote.android.NoteConversionTools;
 import com.dyanote.android.R;

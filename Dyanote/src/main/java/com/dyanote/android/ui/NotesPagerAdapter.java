@@ -5,7 +5,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.util.Log;
 
-import com.dyanote.android.BrowseNotesActivity;
+import com.dyanote.android.activity.BrowseNotesActivity;
 import com.dyanote.android.Note;
 import com.dyanote.android.NoteList;
 

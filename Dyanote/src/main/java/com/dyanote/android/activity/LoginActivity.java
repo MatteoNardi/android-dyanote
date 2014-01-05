@@ -1,4 +1,4 @@
-package com.dyanote.android;
+package com.dyanote.android.activity;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -17,6 +17,9 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.dyanote.android.R;
+import com.dyanote.android.User;
 
 /**
  * Activity which displays a login screen to the user, offering registration as

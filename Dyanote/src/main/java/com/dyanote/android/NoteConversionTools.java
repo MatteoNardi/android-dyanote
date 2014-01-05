@@ -17,6 +17,8 @@ public class NoteConversionTools {
 
     private NoteConversionTools() {}
 
+    // Convert the note xml using a NoteConverter.
+    // We use the Build pattern to support different conversions
     public static void convert(Note note, NoteConverter builder) {
         Log.i("NoteConversionTools", "Converting note " + note.getId() + " with " + builder);
         try {
@@ -114,36 +116,6 @@ public class NoteConversionTools {
         }
         Log.i("Markdown", ris);
         return "<note>" + ris + "</note>";
-        /*
-        XmlSerializer xmlSerializer = Xml.newSerializer();
-        StringWriter writer = new StringWriter();
-        xmlSerializer.setOutput(writer);
-        xmlSerializer.startDocument("UTF-8", true);
-        xmlSerializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
-        xmlSerializer.startTag("", "note");
-
-        String[] lines = s.split("\n");
-        boolean bold = false;
-        boolean italic = false;
-        for(String line: lines) {
-            if(line.startsWith("# ")) {
-                xmlSerializer.startTag("", "h1");
-                xmlSerializer.text(line.substring(2));
-                xmlSerializer.endTag("", "h1");
-            } else {
-                if (contains link) {
-                    convert link
-                } if (contains)
-
-            }
-            xmlSerializer.startTag("", "br");
-            xmlSerializer.endTag("", "br");
-        }
-
-        xmlSerializer.endTag("", "note");
-        xmlSerializer.endDocument();
-
-        return writer.toString();*/
     }
 
     // NoteConverter is a builder used to convert a note from its XML representation

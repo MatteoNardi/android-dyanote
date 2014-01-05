@@ -1,4 +1,4 @@
-package com.dyanote.android;
+package com.dyanote.android.activity;
 
 import android.app.Activity;
 import android.content.Context;
@@ -18,6 +18,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.dyanote.android.Note;
+import com.dyanote.android.NoteList;
+import com.dyanote.android.NoteRestService;
+import com.dyanote.android.R;
+import com.dyanote.android.User;
 import com.dyanote.android.ui.NotesPagerAdapter;
 import com.dyanote.android.ui.NotesViewPager;
 import com.dyanote.android.utils.Func;

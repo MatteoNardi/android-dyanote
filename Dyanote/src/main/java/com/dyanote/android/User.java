@@ -16,14 +16,14 @@ public class User implements Parcelable {
     private String email;
 
     // Create new User with the settings value
-    static User loadFromSettings(SharedPreferences settings) {
+    public static User loadFromSettings(SharedPreferences settings) {
         String email = settings.getString("email", new String());
         String token = settings.getString("token", new String());
         return new User(email, token);
     }
 
     // Remove remembered user from settings
-    static void forgetSettings(SharedPreferences settings) {
+    public static void forgetSettings(SharedPreferences settings) {
         SharedPreferences.Editor editor = settings.edit();
         editor.remove("token");
         editor.remove("email");
