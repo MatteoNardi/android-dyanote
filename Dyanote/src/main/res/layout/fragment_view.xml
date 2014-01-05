@@ -9,18 +9,34 @@
     tools:context=".MainActivity$PlaceholderFragment">
 
     <TextView
-        android:id="@+id/section_label"
+        android:id="@+id/note_text_view"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_above="@+id/editButton"
         android:lineSpacingExtra="5dp"
-        android:clickable="true" />
+        android:clickable="true"
+        android:layout_alignLeft="@+id/note_text_view" />
 
     <Button
+        android:id="@+id/deleteButton"
+        android:text="@string/delete_button_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/edit_button_text"
+        android:layout_alignTop="@+id/newButton"
+        android:layout_alignParentLeft="true" />
+
+    <Button
+        android:id="@+id/newButton"
+        android:text="@string/new_button_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_toLeftOf="@+id/editButton" />
+
+    <Button
         android:id="@+id/editButton"
+        android:text="@string/edit_button_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true" />
 

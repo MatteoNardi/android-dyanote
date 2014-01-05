@@ -43,7 +43,7 @@ public class BrowseNotesActivity extends ActionBarActivity {
 
     NoteRestService restService;
 
-    // Connectivity informations
+    // Connectivity information
     private NetworkReceiver receiver = new NetworkReceiver();
     boolean needConnection = false;
 

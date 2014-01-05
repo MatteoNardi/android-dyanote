@@ -40,7 +40,7 @@ public class NoteFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle bundle) {
         View rootView = inflater.inflate(R.layout.fragment_view, container, false);
-        TextView textView = (TextView) rootView.findViewById(R.id.section_label);
+        TextView textView = (TextView) rootView.findViewById(R.id.note_text_view);
         Button editButton = (Button) rootView.findViewById(R.id.editButton);
         final Note note = getArguments().getParcelable("note");
 
