@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file:///media/matteo/cf170302-a030-4616-8d50-9d510df35479/Programming/android/DyanoteProject/Dyanote/Dyanote.iml" filepath="/media/matteo/cf170302-a030-4616-8d50-9d510df35479/Programming/android/DyanoteProject/Dyanote/Dyanote.iml" />
-      <module fileurl="file:///media/matteo/cf170302-a030-4616-8d50-9d510df35479/Programming/android/DyanoteProject/DyanoteProject.iml" filepath="/media/matteo/cf170302-a030-4616-8d50-9d510df35479/Programming/android/DyanoteProject/DyanoteProject.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Dyanote/Dyanote.iml" filepath="$PROJECT_DIR$/Dyanote/Dyanote.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android-dyanote.iml" filepath="$PROJECT_DIR$/android-dyanote.iml" />
     </modules>
   </component>
 </project>
