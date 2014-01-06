@@ -61,6 +61,7 @@ public class EditNoteActivity extends ActionBarActivity {
     public static class NoteEditorFragment extends Fragment {
 
         EditText editor;
+        EditText titleEditor;
         Button saveButton;
 
         public static NoteEditorFragment newInstance(Note note) {
@@ -80,18 +81,21 @@ public class EditNoteActivity extends ActionBarActivity {
             View rootView = inflater.inflate(R.layout.fragment_edit, container, false);
 
             editor = (EditText) rootView.findViewById(R.id.editor);
+            titleEditor = (EditText) rootView.findViewById(R.id.editTitle);
             saveButton = (Button) rootView.findViewById(R.id.saveButton);
 
             final Note note = getArguments().getParcelable("note");
             MarkdownNoteConverter editRepresentation = new MarkdownNoteConverter();
             NoteConversionTools.convert(note, editRepresentation);
             editor.setText(editRepresentation);
+            titleEditor.setText(note.getTitle());
 
             saveButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     String newXml = NoteConversionTools.MarkdownToXML(editor.getText().toString());
                     note.setXmlBody(newXml);
+                    note.setTitle(titleEditor.getText().toString());
                     Log.i("Edit note", "Saving note..");
                     Intent result = new Intent();
                     result.putExtra("note", note);

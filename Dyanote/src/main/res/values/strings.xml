@@ -18,5 +18,7 @@
     <string name="action_delete">Delete</string>
     <string name="action_edit">Edit</string>
     <string name="action_new">New</string>
+    <string name="new_note_title">New note title</string>
+    <string name="new_note_content"><![CDATA[<note></note>]]></string>
 
 </resources>

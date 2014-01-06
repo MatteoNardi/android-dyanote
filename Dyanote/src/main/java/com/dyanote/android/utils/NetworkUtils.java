@@ -42,12 +42,16 @@ public final class NetworkUtils {
         return request(url, "POST", null, data, false);
     }
 
+    public static String postJson(String url, String data, User user) {
+        return request(url, "POST", user, data, true);
+    }
+
     public static String putJson(String url, String data, User user) {
         return request(url, "PUT", user, data, true);
     }
 
     private static String request(String address, String method, User user, String data, boolean isJson) {
-        Log.i("NetworkUtils", "Request to " + address);
+        Log.i("NetworkUtils", method + " request to " + address);
         URL url = null;
         try {
             url = new URL(address);
@@ -106,7 +110,11 @@ public final class NetworkUtils {
         // Connect and get response
         try {
             conn.connect();
-            InputStream stream = conn.getResponseCode() == 200 ? conn.getInputStream() : conn.getErrorStream();
+            InputStream stream;
+            if (conn.getResponseCode() >= 200 && conn.getResponseCode() < 300)
+                stream = conn.getInputStream();
+            else
+                stream = conn.getErrorStream();
             BufferedInputStream in = new BufferedInputStream(stream);
             java.util.Scanner s = new java.util.Scanner(in, "UTF-8").useDelimiter("\\A");
             return s.hasNext() ? s.next() : "";

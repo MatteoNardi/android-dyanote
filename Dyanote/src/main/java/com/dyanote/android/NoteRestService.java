@@ -4,6 +4,7 @@ package com.dyanote.android;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.util.Pair;
 
 import com.dyanote.android.utils.Func;
 import com.dyanote.android.utils.JsonUtils;
@@ -27,23 +28,33 @@ public class NoteRestService {
         this.c = c;
     }
 
-    public void getAllNotes(Func<NoteList> action) {
+    public void getAllNotes(Func<NoteList> callback) {
         GetAllTask task = new GetAllTask();
-        task.execute(action);
+        task.setCallback(callback);
+        task.execute();
     }
 
     public void upload(Note note) {
         UploadTask task = new UploadTask();
         task.execute(note);
+
     }
 
-    private class GetAllTask extends AsyncTask<Func<NoteList>, Void, NoteList> {
-        Func<NoteList> action = null;
+    public void create(Note note, Func<Note> callback) {
+        CreateTask task = new CreateTask();
+        task.setCallback(callback);
+        task.execute(note);
+    }
+
+    private class GetAllTask extends AsyncTask<Void, Void, NoteList> {
+        private Func<NoteList> callback;
+
+        public void setCallback(Func<NoteList> callback) {
+            this.callback = callback;
+        }
 
         @Override
-        protected NoteList doInBackground(Func<NoteList>... funcs) {
-            action = funcs[0];
-
+        protected NoteList doInBackground(Void... params) {
             NoteList notes = new NoteList();
 
             String url = String.format(c.getString(R.string.pages_url), user.getEmail());
@@ -66,14 +77,14 @@ public class NoteRestService {
                 notes.addNote(new Note(id, parentId, title, body));
             }
 
-            Log.e("GetAllTask", "end.");
+            Log.i("GetAllTask", "end.");
             return notes;
         }
 
         @Override
         protected void onPostExecute(final NoteList notes) {
-            if(action != null)
-                action.run(notes);
+            if(callback != null)
+                callback.run(notes);
         }
     }
 
@@ -83,7 +94,7 @@ public class NoteRestService {
             Note note = notes[0];
             Log.i("UploadTask", "Updating note");
             String url = String.format(c.getString(R.string.page_url),
-                                       user.getEmail(), note.getId());
+                    user.getEmail(), note.getId());
             JSONObject json = new JSONObject();
             try {
                 json.put("title", note.getTitle());
@@ -97,6 +108,49 @@ public class NoteRestService {
             String response = NetworkUtils.putJson(url, json.toString(), user);
             Log.i("UploadTask", response);
             return null;
+        }
+    }
+
+    private class CreateTask extends AsyncTask<Note, Void, Note> {
+        private Func<Note> callback;
+
+        public void setCallback(Func<Note> callback) {
+            this.callback = callback;
+        }
+
+        @Override
+        protected Note doInBackground(Note... params) {
+            Note note = params[0];
+            Log.i("CreateTask", "Creating note");
+            String url = String.format(c.getString(R.string.pages_url), user.getEmail());
+            JSONObject json = new JSONObject();
+            try {
+                json.put("title", note.getTitle());
+                json.put("body", note.getXmlBody());
+                String parentUrl = String.format(c.getString(R.string.page_url),
+                        user.getEmail(), note.getParentId());
+                json.put("parent", parentUrl);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            Log.i("CreateTask", "New note: " + json.toString());
+            String response = NetworkUtils.postJson(url, json.toString(), user);
+            Log.i("CreateTask", "Output: " + response);
+
+            // Update note id
+            Map<String, String> page_details = JsonUtils.parseObject(response);
+            long id = Long.parseLong(page_details.get("id"));
+            note.setId(id);
+
+            return note;
+        }
+
+        @Override
+        protected void onPostExecute(final Note note) {
+            Log.i("asd", "New id" + note.getId());
+            if(callback != null)
+                callback.run(note);
         }
     }
 }

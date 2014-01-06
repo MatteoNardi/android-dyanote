@@ -9,12 +9,20 @@
     tools:context=".EditNoteActivity$PlaceholderFragment">
 
     <EditText
+        android:id="@+id/editTitle"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:textStyle="bold" />
+
+    <EditText
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:id="@+id/editor"
-        android:layout_alignRight="@+id/saveButton"
+        android:gravity="left|top"
+        android:layout_alignParentLeft="true"
         android:layout_above="@+id/saveButton"
-        android:gravity="left|top" />
+        android:layout_below="@+id/editTitle" />
 
     <Button
         android:layout_width="wrap_content"

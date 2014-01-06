@@ -33,8 +33,10 @@ public class BrowseNotesActivity extends ActionBarActivity {
 
     // Code identifying the LoginActivity request
     public static final int LOGIN_REQUEST = 0;
-    // Code identifying the EditNoteActivity request
+    // Code identifying the EditNoteActivity request (Edit note)
     public static final int EDIT_REQUEST = 1;
+    // Code identifying the EditNoteActivity request (New note)
+    public static final int NEW_REQUEST = 2;
 
     NotesViewPager pager; // The widget displaying the pager
     NotesPagerAdapter pagerAdapter; // The model of the ViewPager
@@ -94,7 +96,7 @@ public class BrowseNotesActivity extends ActionBarActivity {
 
     private void loadNotes() {
         if(!isConnected()) {
-            Toast.makeText(getApplicationContext(), R.string.no_network_error, 1000).show();
+            Toast.makeText(getApplicationContext(), R.string.no_network_error, Toast.LENGTH_LONG).show();
             needConnection = true;
             return;
         }
@@ -126,17 +128,32 @@ public class BrowseNotesActivity extends ActionBarActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK && requestCode == LOGIN_REQUEST) {
+            Log.i("BrowseNotesActivity", "LOGIN_REQUEST -> Loading notes");
             user = data.getParcelableExtra("user");
             if(!user.isLoggedIn())
                 new Exception("Login Activity Fail").printStackTrace();
             user.saveToSettings(getPreferences(MODE_PRIVATE));
             loadNotes();
         } else if (resultCode == Activity.RESULT_OK && requestCode == EDIT_REQUEST) {
+            Log.i("BrowseNotesActivity", "EDIT_REQUEST -> Updating note");
             Note note = data.getParcelableExtra("note");
-            Log.i("BrowseNotesActivity", "Updating note..");
             restService.upload(note);
             notes.updateNote(note);
+            updateActionBarTitle();
             pagerAdapter.updateNotes(notes);
+        } else if (resultCode == Activity.RESULT_OK && requestCode == NEW_REQUEST) {
+            Log.i("BrowseNotesActivity", "NEW_REQUEST -> Creating note");
+            Note child = data.getParcelableExtra("note");
+            restService.create(child, new Func<Note>() {
+                @Override
+                public void run(Note newNote) {
+                    Note parent = notes.getById(newNote.getParentId());
+                    notes.addNote(newNote);
+                    parent.appendLinkTo(newNote);
+                    pagerAdapter.updateNotes(notes);
+                    restService.upload(parent);
+                }
+            });
         } else {
             Log.w("BrowseNotesActivity", "Unknown result for" + requestCode + " with code" + resultCode);
             finish();
@@ -160,7 +177,13 @@ public class BrowseNotesActivity extends ActionBarActivity {
                 startActivityForResult(intent, LOGIN_REQUEST);
                 return true;
             case R.id.action_new:
-                //TODO: create new note
+                Note parent = pager.getCurrentNote();
+                Note newNote = new Note(Note.NO_ID, parent.getId(), getString(R.string.new_note_title), getString(R.string.new_note_content));
+                if (parent != null) {
+                    Intent edit_intent = new Intent(this, EditNoteActivity.class);
+                    edit_intent.putExtra("note", newNote);
+                    startActivityForResult(edit_intent, BrowseNotesActivity.NEW_REQUEST);
+                }
                 return true;
             case R.id.action_delete:
                 //TODO: create new note

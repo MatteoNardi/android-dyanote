@@ -2,8 +2,12 @@ package com.dyanote.android;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 public class Note implements Parcelable {
+    // Id identifying unsaved notes which do not have an ID yet
+    public static final long NO_ID = -1;
+
     private long id;
     private String title;
     private String xmlBody;
@@ -31,21 +35,41 @@ public class Note implements Parcelable {
         return id;
     }
 
+    public void setId(long id) {
+        this.id = id;
+    }
+
     public Long getParentId() {
         return parentId;
+    }
+
+    public void setParentId(long parentId) {
+        this.parentId = parentId;
     }
 
     public String getTitle() {
         return title;
     }
 
-    // Get a XML serialization of the note (header and body)
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     public String getXmlBody() {
         return xmlBody;
     }
 
     public void setXmlBody(String xmlBody) {
         this.xmlBody = xmlBody;
+    }
+
+    public void appendLinkTo(Note child) {
+        if(!xmlBody.endsWith("</note>")) {
+            Log.e("Note", "Can't add link: doesn't end with </note>");
+            return;
+        }
+        String link = String.format("<a href=\"%d\">%s</a>", child.getId(), child.getTitle());
+        xmlBody = xmlBody.replace("</note>", "<br/>" + link + "</note>");
     }
 
 
