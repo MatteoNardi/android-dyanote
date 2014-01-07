@@ -190,7 +190,12 @@ public class BrowseNotesActivity extends ActionBarActivity {
                 }
                 return true;
             case R.id.action_delete:
-                //TODO: create new note
+                Note note = adapter.getNoteAt(pager.getCurrentItem());
+                // TODO: remove links to this note
+                notes.deleteNote(note);
+                adapter.close(note);
+                restService.delete(note);
+                pager.setCurrentItem(adapter.getCount() -1);
                 return true;
             case R.id.action_edit:
                 Intent edit_intent = new Intent(this, EditNoteActivity.class);
@@ -213,6 +218,11 @@ public class BrowseNotesActivity extends ActionBarActivity {
     public void onLinkClicked(long id) {
         int pos = -1;
         Note note = notes.getById(id);
+        if(note == null) {
+            // Clicked a link to an old and removed note
+            Toast.makeText(getApplicationContext(), getString(R.string.note_deleted_message), Toast.LENGTH_SHORT).show();
+            return;
+        }
         if(adapter.findPosition(note.getParentId()) == -1) {
             List<Note> path = notes.getAncestorNotePath(id, adapter.getLastNote().getId());
             for (Note n: path)

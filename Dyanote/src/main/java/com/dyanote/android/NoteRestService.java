@@ -46,6 +46,11 @@ public class NoteRestService {
         task.execute(note);
     }
 
+    public void delete(Note note) {
+        DeleteTask task = new DeleteTask();
+        task.execute(note);
+    }
+
     private class GetAllTask extends AsyncTask<Void, Void, NoteList> {
         private Func<NoteList> callback;
 
@@ -148,9 +153,36 @@ public class NoteRestService {
 
         @Override
         protected void onPostExecute(final Note note) {
-            Log.i("asd", "New id" + note.getId());
+            Log.i("CreateTask", "New note id" + note.getId());
             if(callback != null)
                 callback.run(note);
+        }
+    }
+
+
+    private class DeleteTask extends AsyncTask<Note, Void, Void> {
+        private Func<Void> callback;
+
+        public void setCallback(Func<Void> callback) {
+            this.callback = callback;
+        }
+
+        @Override
+        protected Void doInBackground(Note... params) {
+            Note note = params[0];
+            Log.i("DeleteTask", "Deleting note " + note.toString());
+            String url = String.format(c.getString(R.string.page_url), user.getEmail(), note.getId());
+
+            String response = NetworkUtils.delete(url, user);
+            Log.i("DeleteTask", "Output: " + response);
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void v) {
+            if(callback != null)
+                callback.run(null);
         }
     }
 }

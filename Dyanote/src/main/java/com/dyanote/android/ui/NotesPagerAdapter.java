@@ -29,20 +29,33 @@ public class NotesPagerAdapter extends FragmentStatePagerAdapter {
     public int open(Note note) {
         Log.i("NotesPagerAdapter", "Opening note " + note.getId());
 
-        // Search for parent note
-        int parentPosition = findPosition(note.getParentId());
-        if (parentPosition == -1)
-            Log.i("NotesPagerAdapter", "No parent found");
-
-        // Close notes opened after parent
-        while (notes.size() > parentPosition + 1)
-            notes.remove(parentPosition + 1);
+        // Close all descendants of parent
+        closeChildren(note.getParentId());
 
         // Add note
         notes.add(note);
         int position = notes.size() - 1;
         reloadFragmentAt(position);
         return position;
+    }
+
+    // Close all open descendants of the given note.
+    private void closeChildren(long parentId) {
+        // Search for parent note
+        int position = findPosition(parentId);
+        if (position == -1)
+            Log.i("NotesPagerAdapter", "Parent not found");
+
+        // Close notes opened after parent
+        while (notes.size() > position + 1)
+            notes.remove(position + 1);
+    }
+
+    public void close(Note note) {
+        Log.i("NotesPagerAdapter", "Closing note " + note.getId());
+
+        closeChildren(note.getParentId());
+        notifyDataSetChanged();
     }
 
     // Returns the position of the opened note with a given id.

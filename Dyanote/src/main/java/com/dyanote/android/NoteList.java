@@ -74,4 +74,8 @@ public class NoteList {
         Log.e("Path", path.toString());
         return path;
     }
+
+    public void deleteNote(Note note) {
+        notes.remove(note.getId());
+    }
 }

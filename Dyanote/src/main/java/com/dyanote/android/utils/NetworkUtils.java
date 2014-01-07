@@ -50,6 +50,10 @@ public final class NetworkUtils {
         return request(url, "PUT", user, data, true);
     }
 
+    public static String delete(String url, User user) {
+        return request(url, "DELETE", user, null, false);
+    }
+
     private static String request(String address, String method, User user, String data, boolean isJson) {
         Log.i("NetworkUtils", method + " request to " + address);
         URL url = null;
