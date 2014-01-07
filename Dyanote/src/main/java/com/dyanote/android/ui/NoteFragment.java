@@ -1,7 +1,6 @@
 package com.dyanote.android.ui;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.Spannable;
@@ -14,11 +13,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.dyanote.android.activity.BrowseNotesActivity;
-import com.dyanote.android.activity.EditNoteActivity;
 import com.dyanote.android.Note;
 import com.dyanote.android.NoteConversionTools;
 import com.dyanote.android.R;
@@ -40,6 +37,22 @@ public class NoteFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle bundle) {
         View rootView = inflater.inflate(R.layout.fragment_view, container, false);
+        update(rootView);
+        return rootView;
+    }
+
+    // Update fragment content with note.
+    public void reload(Note note) {
+        Log.i("NoteFragment", "Reloading " + note.toString());
+        getArguments().putParcelable("note", note);
+        update(getView());
+    }
+
+    private void update(View rootView) {
+        if(rootView == null) {
+            Log.w("NoteFragment", "null rootView");
+            return;
+        }
         TextView textView = (TextView) rootView.findViewById(R.id.note_text_view);
         final Note note = getArguments().getParcelable("note");
 
@@ -64,15 +77,13 @@ public class NoteFragment extends Fragment {
             }
 
             @Override
-            public void setLink(int start, int end, Long href) {
-                final Long id = href;
-                final NotesViewPager pager = activity.getPager();
+            public void setLink(int start, int end, final Long id) {
                 setSpan(new TextAppearanceSpan(c, R.style.LinkText), start, end, 0);
                 setSpan(new ClickableSpan() {
                     @Override
                     public void onClick(View view) {
                         Log.i("Click!", "Open note " + id);
-                        pager.openNote(id);
+                        activity.onLinkClicked(id);
                     }
                 }, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 // TODO: Save span coordinates.
@@ -92,8 +103,6 @@ public class NoteFragment extends Fragment {
         NoteConversionTools.convert(note, converter);
         textView.setText(converter);
         textView.setMovementMethod(LinkMovementMethod.getInstance());
-
-        return rootView;
     }
 
     // SpannableNoteConverter is a NoteConverter which allows to add special formatting.

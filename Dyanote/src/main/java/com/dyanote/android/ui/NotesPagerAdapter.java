@@ -5,80 +5,111 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.util.Log;
 
-import com.dyanote.android.activity.BrowseNotesActivity;
 import com.dyanote.android.Note;
-import com.dyanote.android.NoteList;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class NotesPagerAdapter extends FragmentStatePagerAdapter {
 
-    private NoteList notes;
-    // IDs of the currently opened notes, from the root note to the current note
-    private List<Long> openNotesId;
-    // Fake fragment shown after all notes
-    private Fragment endFragment;
+    // Currently opened notes, from the root note to the current note
+    private List<Note> notes;
+    // Fragments of the currently opened notes, from the root note to the current note
+    private List<NoteFragment> fragments;
 
     public NotesPagerAdapter(FragmentManager fm) {
         super(fm);
-        this.openNotesId = new ArrayList<Long>();
-        this.notes = new NoteList();
-        this.endFragment = BrowseNotesActivity.EndFragment.newInstance();
-    }
-
-    public void updateNotes(NoteList notes) {
-        if(this.notes.size() == 0)
-            openNotesId.add(notes.getRoot().getId());
-        this.notes = notes;
-        notifyDataSetChanged();
+        this.notes = new ArrayList<Note>();
+        this.fragments = new ArrayList<NoteFragment>();
     }
 
     // Insert a new note after its parent (Which must be already opened)
     // (Close the other opened notes).
     // Return position of the added page
-    public int addNote(long id) {
-        // TODO: This does not work for light-links
-        Note note = notes.getById(id);
-        Log.e("ADD", note.getXmlBody());
-        Long parent = note.getParentId();
-        int parent_position = openNotesId.indexOf(parent);
-        while (openNotesId.size() > parent_position + 1)
-            openNotesId.remove(parent_position + 1);
-        openNotesId.add(id);
-        notifyDataSetChanged();
-        return openNotesId.size() - 1;
+    public int open(Note note) {
+        Log.i("NotesPagerAdapter", "Opening note " + note.getId());
+
+        // Search for parent note
+        int parentPosition = findPosition(note.getParentId());
+        if (parentPosition == -1)
+            Log.i("NotesPagerAdapter", "No parent found");
+
+        // Close notes opened after parent
+        while (notes.size() > parentPosition + 1)
+            notes.remove(parentPosition + 1);
+
+        // Add note
+        notes.add(note);
+        int position = notes.size() - 1;
+        reloadFragmentAt(position);
+        return position;
     }
+
+    // Returns the position of the opened note with a given id.
+    public int findPosition(long id) {
+        for(int i = 0; i < notes.size(); i++)
+            if (notes.get(i).getId() == id)
+                return i;
+        return -1;
+    }
+
+    // Update the given note, refreshing its fragment
+    public void reload(Note note) {
+        int position = findPosition(note.getId());
+        if (position == -1) {
+            Log.e("NotesPagerAdapter", "Reloading a note which was never opened");
+            return;
+        }
+        notes.set(position, note);
+        reloadFragmentAt(position);
+    }
+
+    // Load a note at a given position.
+    // If a fragment already exists it that position we update it. If it doesn't we create it.
+    private void reloadFragmentAt(int position) {
+        Note note = notes.get(position);
+        if(position == fragments.size()) {
+            fragments.add(NoteFragment.newInstance(note));
+        } else if (position < fragments.size()) {
+            fragments.get(position).reload(note);
+        } else {
+            Log.e("NotesPagerAdapter", "Can't reload fragment at position " + position);
+        }
+        notifyDataSetChanged();
+    }
+
+    // Returns the note opened at the given position.
+    public Note getNoteAt(int position) {
+        if(position < notes.size())
+            return notes.get(position);
+        else
+            return null;
+    }
+
+    // Returns the last opened note.
+    public Note getLastNote() {
+        return notes.get(notes.size() - 1);
+    }
+
+    // Implement FragmentStatePagerAdapter interface.
 
     @Override
     public Fragment getItem(int position) {
-        if (position >= openNotesId.size())
-            return endFragment;
-        Note note = notes.getById(openNotesId.get(position));
-        return NoteFragment.newInstance(note);
+        return fragments.get(position);
     }
 
     @Override
     public int getCount() {
-        return openNotesId.size() + 1;
+        return notes.size();
     }
 
     @Override
     public CharSequence getPageTitle(int position) {
-        if (position >= openNotesId.size())
-            return "...";
-        return notes.getById(openNotesId.get(position)).getTitle();
+        return getNoteAt(position).getTitle();
     }
 
     @Override
     public int getItemPosition(Object object) {
         return POSITION_NONE;
-    }
-
-    public Note getNoteAt(int position) {
-        if(position < openNotesId.size())
-            return notes.getById(openNotesId.get(position));
-        else
-            return null;
     }
 }

@@ -8,15 +8,11 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.dyanote.android.Note;
@@ -25,9 +21,10 @@ import com.dyanote.android.NoteRestService;
 import com.dyanote.android.R;
 import com.dyanote.android.User;
 import com.dyanote.android.ui.NotesPagerAdapter;
-import com.dyanote.android.ui.NotesViewPager;
 import com.dyanote.android.utils.Func;
 import com.dyanote.android.utils.NetworkReceiver;
+
+import java.util.List;
 
 public class BrowseNotesActivity extends ActionBarActivity {
 
@@ -38,8 +35,8 @@ public class BrowseNotesActivity extends ActionBarActivity {
     // Code identifying the EditNoteActivity request (New note)
     public static final int NEW_REQUEST = 2;
 
-    NotesViewPager pager; // The widget displaying the pager
-    NotesPagerAdapter pagerAdapter; // The model of the ViewPager
+    ViewPager pager; // The widget displaying the pager
+    NotesPagerAdapter adapter; // The model of the ViewPager
 
     NoteList notes;
     User user;
@@ -71,9 +68,9 @@ public class BrowseNotesActivity extends ActionBarActivity {
         // Setup widgets.
         notes = new NoteList();
         setContentView(R.layout.activity_browse);
-        pagerAdapter = new NotesPagerAdapter(getSupportFragmentManager());
-        pager = (NotesViewPager) findViewById(R.id.pager);
-        pager.setAdapter(pagerAdapter);
+        adapter = new NotesPagerAdapter(getSupportFragmentManager());
+        pager = (ViewPager) findViewById(R.id.pager);
+        pager.setAdapter(adapter);
         pager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int i) {
@@ -107,15 +104,14 @@ public class BrowseNotesActivity extends ActionBarActivity {
             public void run(NoteList ris) {
                 notes = ris;
                 Log.i("BrowseNotesActivity", notes.size() + " notes.");
-                pagerAdapter.updateNotes(notes);
+                adapter.open(notes.getRoot());
                 updateActionBarTitle();
             }
         });
     }
 
     private void updateActionBarTitle() {
-        Note currentNote = pager.getCurrentNote();
-        String title = currentNote != null ? currentNote.getTitle() : "Dyanote";
+        CharSequence title = adapter.getPageTitle(pager.getCurrentItem());
         getSupportActionBar().setTitle(title);
     }
 
@@ -127,6 +123,7 @@ public class BrowseNotesActivity extends ActionBarActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
         if (resultCode == Activity.RESULT_OK && requestCode == LOGIN_REQUEST) {
             Log.i("BrowseNotesActivity", "LOGIN_REQUEST -> Loading notes");
             user = data.getParcelableExtra("user");
@@ -134,13 +131,15 @@ public class BrowseNotesActivity extends ActionBarActivity {
                 new Exception("Login Activity Fail").printStackTrace();
             user.saveToSettings(getPreferences(MODE_PRIVATE));
             loadNotes();
+
         } else if (resultCode == Activity.RESULT_OK && requestCode == EDIT_REQUEST) {
             Log.i("BrowseNotesActivity", "EDIT_REQUEST -> Updating note");
             Note note = data.getParcelableExtra("note");
             restService.upload(note);
             notes.updateNote(note);
             updateActionBarTitle();
-            pagerAdapter.updateNotes(notes);
+            adapter.reload(note);
+
         } else if (resultCode == Activity.RESULT_OK && requestCode == NEW_REQUEST) {
             Log.i("BrowseNotesActivity", "NEW_REQUEST -> Creating note");
             Note child = data.getParcelableExtra("note");
@@ -150,10 +149,15 @@ public class BrowseNotesActivity extends ActionBarActivity {
                     Note parent = notes.getById(newNote.getParentId());
                     notes.addNote(newNote);
                     parent.appendLinkTo(newNote);
-                    pagerAdapter.updateNotes(notes);
+                    adapter.reload(parent);
+                    adapter.open(newNote);
                     restService.upload(parent);
                 }
             });
+
+        } else if (requestCode == NEW_REQUEST || requestCode == EDIT_REQUEST) {
+            // Editing was cancelled
+
         } else {
             Log.w("BrowseNotesActivity", "Unknown result for" + requestCode + " with code" + resultCode);
             finish();
@@ -177,7 +181,7 @@ public class BrowseNotesActivity extends ActionBarActivity {
                 startActivityForResult(intent, LOGIN_REQUEST);
                 return true;
             case R.id.action_new:
-                Note parent = pager.getCurrentNote();
+                Note parent = adapter.getNoteAt(pager.getCurrentItem());
                 Note newNote = new Note(Note.NO_ID, parent.getId(), getString(R.string.new_note_title), getString(R.string.new_note_content));
                 if (parent != null) {
                     Intent edit_intent = new Intent(this, EditNoteActivity.class);
@@ -190,7 +194,7 @@ public class BrowseNotesActivity extends ActionBarActivity {
                 return true;
             case R.id.action_edit:
                 Intent edit_intent = new Intent(this, EditNoteActivity.class);
-                edit_intent.putExtra("note", pager.getCurrentNote());
+                edit_intent.putExtra("note", adapter.getNoteAt(pager.getCurrentItem()));
                 startActivityForResult(edit_intent, BrowseNotesActivity.EDIT_REQUEST);
                 return true;
         }
@@ -205,18 +209,17 @@ public class BrowseNotesActivity extends ActionBarActivity {
         }
     }
 
-    public NotesViewPager getPager() {
-        return pager;
-    }
-
-    public static class EndFragment extends Fragment {
-        public static EndFragment newInstance() {
-            return new EndFragment();
+    // Called when a link is clicked
+    public void onLinkClicked(long id) {
+        int pos = -1;
+        Note note = notes.getById(id);
+        if(adapter.findPosition(note.getParentId()) == -1) {
+            List<Note> path = notes.getAncestorNotePath(id, adapter.getLastNote().getId());
+            for (Note n: path)
+                pos = adapter.open(n);
+        } else {
+            pos = adapter.open(note);
         }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle bundle) {
-            return inflater.inflate(R.layout.fragment_view_end, container, false);
-        }
+        pager.setCurrentItem(pos);
     }
 }

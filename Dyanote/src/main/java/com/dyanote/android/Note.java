@@ -72,6 +72,9 @@ public class Note implements Parcelable {
         xmlBody = xmlBody.replace("</note>", "<br/>" + link + "</note>");
     }
 
+    public boolean isRoot() {
+        return parentId == id;
+    }
 
     /* Parcelable implementation */
 
@@ -97,4 +100,12 @@ public class Note implements Parcelable {
             return new Note[size];
         }
     };
+
+    @Override
+    public String toString() {
+        return "Note{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                '}';
+    }
 }
