@@ -92,11 +92,13 @@ public final class NetworkUtils {
             conn.setRequestProperty("Content-Type", "application/json");
 
         conn.setDoInput(true);
-        conn.setDoOutput(true);
         conn.setUseCaches(false);
 
         // Add data
         if(data != null) {
+            conn.setDoOutput(true);
+            if(method == "GET")
+                throw new UnsupportedOperationException("Can't add data to get request");
             OutputStream os;
             try {
                 os = conn.getOutputStream();
